@@ -1,0 +1,65 @@
+name: 打包便携版
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          architecture: x64
+
+      - name: 安装依赖
+        run: python -m pip install -r source/requirements-build.txt
+
+      - name: 源码自检
+        run: python source/wechat_tool.py --self-test
+
+      - name: PyInstaller 打包
+        run: python -m PyInstaller --noconfirm --onedir --console --name WeChatExport --distpath dist/app --workpath build-cache --specpath build-cache source/wechat_tool.py
+
+      - name: exe 自检
+        run: ./dist/app/WeChatExport/WeChatExport.exe --self-test
+
+      - name: 组装压缩包
+        shell: pwsh
+        run: |
+          $pkg = 'dist/WeChatExport-portable-win64'
+          New-Item -ItemType Directory -Force $pkg | Out-Null
+          Move-Item dist/app $pkg/app
+          Copy-Item packaging/离线自检.bat, packaging/启动图形界面.bat, packaging/校验文件.ps1 $pkg/
+          Copy-Item -Recurse docs $pkg/docs
+          Copy-Item README.md $pkg/
+          # 生成 SHA256SUMS.json 供 校验文件.ps1 使用
+          $base = (Resolve-Path $pkg).Path
+          $files = Get-ChildItem -Recurse -File $pkg | Where-Object { $_.Name -ne 'SHA256SUMS.json' } | ForEach-Object {
+            [ordered]@{
+              path   = $_.FullName.Substring($base.Length + 1).Replace('\','/')
+              size   = $_.Length
+              sha256 = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant()
+            }
+          }
+          @{ files = @($files) } | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 "$pkg/SHA256SUMS.json"
+          Compress-Archive -Path $pkg -DestinationPath dist/WeChatExport-portable-win64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WeChatExport-portable-win64
+          path: dist/WeChatExport-portable-win64.zip
+
+      - name: 发布 Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/WeChatExport-portable-win64.zip
+          body_path: .github/release-notes.md

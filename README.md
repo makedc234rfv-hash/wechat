@@ -14,6 +14,10 @@
 | `docs/打包验证记录_20261027.md` | 便携版打包时的验证范围 |
 | `packaging/` | 便携包里的启动/自检/校验脚本（需和 `app\WeChatExport\` 放在一起才能用） |
 
+## 下载即用
+
+到 [Releases](../../releases) 下载 `WeChatExport-portable-win64.zip`，整个解压，双击 `离线自检.bat`（11 项通过），再双击 `启动图形界面.bat`。不用装 Python。便携版由 GitHub Actions 从本仓库源码自动打包（`.github/workflows/release.yml`）。
+
 ## 快速使用（源码方式）
 
 要求：Windows x64、Python 3.14 x64（用到标准库 `compression.zstd`）、微信 4.x 已登录并在运行。
