@@ -1,0 +1,32 @@
+# 聊天数据、导出结果、数据库一律不进仓库
+exports/
+微信导出/
+聊天归档/
+*-run[0-9]*/
+_temporary_snapshot/
+decrypted/
+snapshot-full/
+*.db
+*.db-wal
+*.db-shm
+*.jsonl
+*.dat
+*.silk
+*-工作摘要*.md
+
+# 构建产物（便携程序走 Release，不进 git）
+app/
+rebuild/
+build-cache/
+dist/
+build/
+*.exe
+*.spec
+.venv/
+__pycache__/
+*.pyc
+
+# 凭据
+.env
+*.key
+*.pem

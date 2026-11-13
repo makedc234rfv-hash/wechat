@@ -1,0 +1,2 @@
+# Python 3.14 x64 required: compression.zstd is part of its standard library.
+cryptography==50.0.1
